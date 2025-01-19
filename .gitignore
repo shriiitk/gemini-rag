@@ -22,5 +22,8 @@ myenv/
 env/
 gemini/
 
+chroma/
+.chroma/
+
 # Log files
 *.log
