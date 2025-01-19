@@ -1,0 +1,7 @@
+This is a sample document for testing the RAG chatbot.
+It contains some information about artificial intelligence and machine learning.
+We are using Google Gemini models for text generation.
+This demo project showcases the Retrieval Augmented Generation capabilities.
+It allows users to interact with the chatbot through a web interface.
+The vector database is used to store and retrieve context-relevant information.
+This is an open source project.

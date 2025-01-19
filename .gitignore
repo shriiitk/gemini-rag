@@ -1,0 +1,26 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.DS_Store
+build/
+dist/
+*.egg-info
+*.egg
+*.whl
+
+# Environments
+.env
+venv/
+myenv/
+env/
+gemini/
+
+# Log files
+*.log
