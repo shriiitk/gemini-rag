@@ -7,6 +7,7 @@ from typing import List
 import streamlit as st
 from dotenv import load_dotenv
 import chromadb
+import uuid
 load_dotenv()
 
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
@@ -44,9 +45,8 @@ def initialize_vector_db(texts: List[str]) -> Chroma:
         Chroma: An initialized Chroma vector database instance.
     """
     embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
-    client = chromadb.Client(settings=chromadb.Settings(is_persistent=False))
-    collection = client.get_or_create_collection(name="my_collection")
-    vector_db = Chroma(embedding_function=embeddings, client=client, collection_name="my_collection")
+    client = chromadb.Client()
+    vector_db = Chroma(embedding_function=embeddings, client=client, persist_directory=None, collection_name="my_collection")
     vector_db.add_texts(texts)
     return vector_db
 
@@ -68,5 +68,5 @@ def perform_similarity_search(vector_db: Chroma, query: str, k: int = 3) -> List
         return []
 
     retriever = vector_db.as_retriever(search_kwargs={"k": k})
-    relevant_documents = retriever.invoke(query) # Changed from get_relevant_documents() to invoke()
+    relevant_documents = retriever.invoke(query)
     return [doc.page_content for doc in relevant_documents]
