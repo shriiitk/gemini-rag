@@ -6,6 +6,7 @@ import os
 from typing import List
 import streamlit as st
 from dotenv import load_dotenv
+import chromadb
 load_dotenv()
 
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
@@ -43,7 +44,9 @@ def initialize_vector_db(texts: List[str]) -> Chroma:
         Chroma: An initialized Chroma vector database instance.
     """
     embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
-    vector_db = Chroma.from_texts(texts, embeddings, persist_directory=None) # Added persist_directory=None
+    client = chromadb.Client(settings=chromadb.Settings(is_persistent=False))
+    vector_db = Chroma(embedding_function=embeddings, client=client, collection_name="my_collection")
+    vector_db.add_texts(texts)
     return vector_db
 
 
