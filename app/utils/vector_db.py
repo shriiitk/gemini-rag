@@ -42,8 +42,8 @@ def initialize_vector_db(texts: List[str]) -> Chroma:
     Returns:
         Chroma: An initialized Chroma vector database instance.
     """
-    embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001") # Updated
-    vector_db = Chroma.from_texts(texts, embeddings)
+    embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+    vector_db = Chroma.from_texts(texts, embeddings, persist_directory=None) # Added persist_directory=None
     return vector_db
 
 
