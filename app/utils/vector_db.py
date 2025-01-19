@@ -1,7 +1,7 @@
 from langchain.text_splitter import CharacterTextSplitter
 from langchain_community.document_loaders import TextLoader
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
-from langchain_chroma import Chroma
+from langchain.vectorstores import Chroma  # Changed import
 import os
 from typing import List
 import streamlit as st
@@ -45,9 +45,12 @@ def initialize_vector_db(texts: List[str]) -> Chroma:
         Chroma: An initialized Chroma vector database instance.
     """
     embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
-    client = chromadb.EphemeralClient()
-    vector_db = Chroma(embedding_function=embeddings, client=client, collection_name="my_collection")
-    vector_db.add_texts(texts)
+    vector_db = Chroma.from_texts(
+        texts=texts,
+        embedding=embeddings,
+        persist_directory=None, #Enforce In-memory mode
+        collection_name="my_collection"
+    )
     return vector_db
 
 
@@ -66,7 +69,6 @@ def perform_similarity_search(vector_db: Chroma, query: str, k: int = 3) -> List
     if not vector_db:
         st.error("Vector database is not initialized.")
         return []
-
-    retriever = vector_db.as_retriever(search_kwargs={"k": k})
-    relevant_documents = retriever.invoke(query)
+    
+    relevant_documents = vector_db.similarity_search(query, k=k)
     return [doc.page_content for doc in relevant_documents]
