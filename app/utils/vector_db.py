@@ -1,7 +1,7 @@
 from langchain.text_splitter import CharacterTextSplitter
 from langchain_community.document_loaders import TextLoader
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
-from langchain_community.vectorstores import Chroma  # Changed import
+from langchain_community.vectorstores import FAISS  # Corrected import
 import os
 from typing import List
 import streamlit as st
@@ -11,15 +11,7 @@ load_dotenv()
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
 def load_and_split_documents(file_path: str) -> List[str]:
-    """
-    Loads a text file and splits it into chunks for vectorization.
-
-    Args:
-        file_path (str): Path to the text file.
-
-    Returns:
-        List[str]: A list of text chunks.
-    """
+    """Loads and splits documents."""
     try:
         loader = TextLoader(file_path)
         documents = loader.load()
@@ -32,41 +24,18 @@ def load_and_split_documents(file_path: str) -> List[str]:
     return [doc.page_content for doc in docs]
 
 
-def initialize_vector_db(texts: List[str]) -> Chroma:
-    """
-    Initializes and populates a Chroma vector database.
-
-    Args:
-        texts (List[str]): A list of text strings to be embedded.
-
-    Returns:
-        Chroma: An initialized Chroma vector database instance.
-    """
+def initialize_vector_db(texts: List[str]) -> FAISS:
+    """Initializes FAISS vector database."""
     embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
-    vector_db = Chroma.from_texts(
-        texts=texts,
-        embedding=embeddings,
-        persist_directory=None, #Enforce In-memory mode
-        collection_name="my_collection"
-    )
+    vector_db = FAISS.from_texts(texts, embedding=embeddings)
     return vector_db
 
 
-def perform_similarity_search(vector_db: Chroma, query: str, k: int = 3) -> List[str]:
-    """
-    Performs a similarity search in the vector database.
-
-    Args:
-        vector_db (Chroma): The Chroma vector database instance.
-        query (str): The query string to search for.
-        k (int): The number of nearest neighbors to return.
-
-    Returns:
-        List[str]: A list of text chunks that are the most similar to the query.
-    """
+def perform_similarity_search(vector_db: FAISS, query: str, k: int = 3) -> List[str]:
+    """Performs similarity search."""
     if not vector_db:
         st.error("Vector database is not initialized.")
         return []
-    
-    relevant_documents = vector_db.similarity_search(query, k=k)
-    return [doc.page_content for doc in relevant_documents]
+
+    docs = vector_db.similarity_search(query, k=k)
+    return [doc.page_content for doc in docs]
