@@ -1,13 +1,11 @@
 from langchain.text_splitter import CharacterTextSplitter
 from langchain_community.document_loaders import TextLoader
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
-from langchain.vectorstores import Chroma  # Changed import
+from langchain_community.vectorstores import Chroma  # Changed import
 import os
 from typing import List
 import streamlit as st
 from dotenv import load_dotenv
-import chromadb
-import uuid
 load_dotenv()
 
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
