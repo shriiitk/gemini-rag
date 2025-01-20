@@ -149,14 +149,9 @@ if user_input:
     
 
 # --- Audio Input/Processing Button (separate from chat input)---
-try:
-    import sounddevice as sd
-    import soundfile as sf
-    if st.button("Record and Ask", key="audio_button"):
-        if not st.session_state.recording:
-            temp_audio_file_name = record_audio()
-            process_audio(temp_audio_file_name)
-except ImportError:
-    st.info("Audio recording is not supported in this environment.")
+if st.button("Record and Ask", key="audio_button"):
+    if not st.session_state.recording:
+        temp_audio_file_name = record_audio()
+        process_audio(temp_audio_file_name)
 
 cleanup_old_audio_files(audio_dir, 3600) #cleanup files older than 1 hour.
