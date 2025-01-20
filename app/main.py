@@ -85,9 +85,9 @@ def process_audio(temp_audio_file_name):
         try:
             user_input = transcribe_audio(temp_audio_file_name)
             if user_input and "Error" not in user_input:
-                st.session_state.chat_history.append(("user", user_input))
                 with st.chat_message("user"):
-                        st.write(user_input)
+                    st.write(user_input)
+                st.session_state.chat_history.append(("user", user_input))
                 with st.spinner("Fetching answer using RAG technique ..."):
                     # Perform Similarity Search
                     relevant_documents = perform_similarity_search(st.session_state.vector_db, user_input)
@@ -97,14 +97,12 @@ def process_audio(temp_audio_file_name):
                         ai_response = generate_response(rag_prompt)
                     else:
                         ai_response = generate_response(user_input)
-                    st.session_state.chat_history.append(("ai", ai_response))
                     with st.chat_message("ai"):
                         st.write(ai_response)
                     # Audio Synthesis
                     file_id = str(uuid.uuid4())
                     audio_response_file = os.path.join(audio_dir, f"{file_id}.mp3")
                     synthesize_speech(ai_response, audio_response_file)
-                    time.sleep(2)
                     #Play audio response
                     logging.info(f"Audio response generated at: {audio_response_file}")
                     audio_file = open(audio_response_file, "rb")
@@ -114,6 +112,7 @@ def process_audio(temp_audio_file_name):
                     audio_file.close()
                     # Remove temporary files after playing audio.
                     os.remove(temp_audio_file_name)
+                    st.session_state.chat_history.append(("ai", ai_response))
                     
             else:
                 st.error(user_input)
@@ -122,12 +121,15 @@ def process_audio(temp_audio_file_name):
             st.error(f"An unexpected error occurred: {e}")
             logging.exception("An unexpected error occurred during audio processing")
 
+
 # --- Chat Interface ---
 display_chat_messages(st.session_state.chat_history)
 
 user_input = get_user_input()
 
 if user_input:
+    with st.chat_message("user"):
+        st.write(user_input)
     st.session_state.chat_history.append(("user", user_input))
     with st.spinner("Fetching answer using RAG technique ..."):
         # Perform Similarity Search
@@ -138,6 +140,8 @@ if user_input:
             ai_response = generate_response(rag_prompt)
         else:
             ai_response = generate_response(user_input)
+    with st.chat_message("ai"):
+        st.write(ai_response)
     st.session_state.chat_history.append(("ai", ai_response))
     # Audio Synthesis
     temp_audio_file = tempfile.NamedTemporaryFile(delete=False, suffix=".mp3")
