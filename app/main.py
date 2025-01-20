@@ -42,24 +42,22 @@ if not st.session_state.vector_db:
         else:
             st.error("Failed to load document and initialize the vector DB. Please check data file.")
 
-# Conditional imports for sounddevice and soundfile
-if "streamlit" not in sys.modules:
-    import sounddevice as sd
-    import soundfile as sf
-
 # --- Audio Input/Processing ---
-recording = False
+if 'recording' not in st.session_state:
+    st.session_state.recording = False
 audio_data = None
 
 def record_audio():
-    global recording, audio_data
-    recording = True
+    import sounddevice as sd
+    import soundfile as sf
+    global audio_data
+    st.session_state.recording = True
     fs = 44100  # Sample rate
     duration = 5  # Seconds
     print(f"Recording audio for {duration} seconds...")
     audio_data = sd.rec(int(duration * fs), samplerate=fs, channels=1, dtype='float32')
     sd.wait()  # Wait until recording is finished
-    recording = False
+    st.session_state.recording = False
     with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as temp_audio_file:
         temp_audio_file_name = temp_audio_file.name
         sf.write(temp_audio_file_name, audio_data, fs)
@@ -117,11 +115,8 @@ if user_input:
     play_audio(temp_audio_file.name)
     st.rerun()
 
-
 # --- Audio Input/Processing Button (separate from chat input)---
-if "sounddevice" in sys.modules:
-    if st.button("Record and Process Audio", key="audio_button"):
-        if not recording:
-            st.session_state['audio_button_clicked'] = True
-            temp_audio_file_name = record_audio()
-            process_audio(temp_audio_file_name)
+if st.button("Record and Process Audio", key="audio_button"):
+    if not st.session_state.recording:
+        temp_audio_file_name = record_audio()
+        process_audio(temp_audio_file_name)
