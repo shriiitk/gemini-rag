@@ -85,9 +85,9 @@ def process_audio(temp_audio_file_name):
         try:
             user_input = transcribe_audio(temp_audio_file_name)
             if user_input and "Error" not in user_input:
-                with st.chat_message("user"):
-                    st.write(user_input)
                 st.session_state.chat_history.append(("user", user_input))
+                with st.chat_message("user"):
+                        st.write(user_input)
                 with st.spinner("Fetching answer using RAG technique ..."):
                     # Perform Similarity Search
                     relevant_documents = perform_similarity_search(st.session_state.vector_db, user_input)
@@ -121,7 +121,6 @@ def process_audio(temp_audio_file_name):
             st.error(f"An unexpected error occurred: {e}")
             logging.exception("An unexpected error occurred during audio processing")
 
-
 # --- Chat Interface ---
 display_chat_messages(st.session_state.chat_history)
 
@@ -150,9 +149,14 @@ if user_input:
     
 
 # --- Audio Input/Processing Button (separate from chat input)---
-if st.button("Record and Ask", key="audio_button"):
-    if not st.session_state.recording:
-        temp_audio_file_name = record_audio()
-        process_audio(temp_audio_file_name)
+try:
+    import sounddevice as sd
+    import soundfile as sf
+    if st.button("Record and Ask", key="audio_button"):
+        if not st.session_state.recording:
+            temp_audio_file_name = record_audio()
+            process_audio(temp_audio_file_name)
+except ImportError:
+    st.info("Audio recording is not supported in this environment.")
 
 cleanup_old_audio_files(audio_dir, 3600) #cleanup files older than 1 hour.
