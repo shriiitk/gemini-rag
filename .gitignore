@@ -27,3 +27,5 @@ chroma/
 
 # Log files
 *.log
+*.wav
+*.mp3

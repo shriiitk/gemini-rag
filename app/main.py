@@ -6,8 +6,18 @@ import streamlit as st
 from app.components.chat_interface import display_chat_messages, get_user_input
 from app.utils.vector_db import load_and_split_documents, initialize_vector_db, perform_similarity_search
 from app.utils.gemini_utils import generate_response, build_rag_prompt
-import os
+from app.audio.audio_processing import transcribe_audio, synthesize_speech, play_audio
+import tempfile
+import sounddevice as sd
+import soundfile as sf
+import streamlit as st
+import tempfile
+import time
+from gtts import gTTS
+import logging
 
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # --- App Configuration ---
 st.set_page_config(
@@ -35,6 +45,51 @@ if not st.session_state.vector_db:
             st.error("Failed to load document and initialize the vector DB. Please check data file.")
 
 
+# --- Audio Input/Processing ---
+recording = False
+audio_data = None
+audio_player = st.empty()
+
+def record_audio():
+    global recording, audio_data
+    recording = True
+    fs = 44100  # Sample rate
+    duration = 5  # Seconds
+    print(f"Recording audio for {duration} seconds...")
+    audio_data = sd.rec(int(duration * fs), samplerate=fs, channels=1, dtype='float32')
+    sd.wait()  # Wait until recording is finished
+    recording = False
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as temp_audio_file:
+        temp_audio_file_name = temp_audio_file.name
+        sf.write(temp_audio_file_name, audio_data, fs)
+        return temp_audio_file_name
+
+if st.button("Record and Process Audio"):
+    if not recording:
+        temp_audio_file_name = record_audio()
+        with st.spinner("Processing audio..."):
+            user_input = transcribe_audio(temp_audio_file_name)
+            if user_input and "Error" not in user_input:
+                st.session_state.chat_history.append(("user", user_input))
+                with st.spinner("Fetching answer using RAG technique ..."):
+                    # Perform Similarity Search
+                    relevant_documents = perform_similarity_search(st.session_state.vector_db, user_input)
+                    if relevant_documents:
+                        context = "\n\n".join(relevant_documents)
+                        rag_prompt = build_rag_prompt(user_input, context)
+                        ai_response = generate_response(rag_prompt)
+                    else:
+                        ai_response = generate_response(user_input)
+                    st.session_state.chat_history.append(("ai", ai_response))
+                    # Audio Synthesis
+                    temp_audio_file = tempfile.NamedTemporaryFile(delete=False, suffix=".mp3")
+                    synthesize_speech(ai_response, temp_audio_file.name)
+                    play_audio(temp_audio_file.name)
+                    os.remove(temp_audio_file_name) #remove temp audio file after processing.
+                    st.rerun()
+            else:
+                st.error(user_input)
+
 # --- Chat Interface ---
 display_chat_messages(st.session_state.chat_history)
 
@@ -52,4 +107,8 @@ if user_input:
         else:
             ai_response = generate_response(user_input)
     st.session_state.chat_history.append(("ai", ai_response))
+    # Audio Synthesis
+    temp_audio_file = tempfile.NamedTemporaryFile(delete=False, suffix=".mp3")
+    synthesize_speech(ai_response, temp_audio_file.name)
+    play_audio(temp_audio_file.name)
     st.rerun()
