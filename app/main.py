@@ -11,11 +11,11 @@ import os
 
 # --- App Configuration ---
 st.set_page_config(
-    page_title="RAG Chatbot using Gemini",
+    page_title="RAG Chatbot",
     page_icon="🤖",
     layout="wide"
 )
-st.title("RAG Chatbot using Gemini")
+st.title("RAG Chatbot")
 
 # --- Initialize Session State ---
 if 'chat_history' not in st.session_state:
@@ -23,7 +23,7 @@ if 'chat_history' not in st.session_state:
 if 'vector_db' not in st.session_state:
     st.session_state.vector_db = None
 
-DATA_FILE_PATH = "data/sample_data.txt"
+DATA_FILE_PATH = "data/HoroscopeBook.txt"
 
 # --- Load Data and Setup Vector DB ---
 if not st.session_state.vector_db:
