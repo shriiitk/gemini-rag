@@ -44,11 +44,14 @@ if not st.session_state.vector_db:
         else:
             st.error("Failed to load document and initialize the vector DB. Please check data file.")
 
+# Conditional imports for sounddevice and soundfile
+if "streamlit" not in sys.modules:
+    import sounddevice as sd
+    import soundfile as sf
 
 # --- Audio Input/Processing ---
 recording = False
 audio_data = None
-audio_player = st.empty()
 
 def record_audio():
     global recording, audio_data
@@ -64,10 +67,9 @@ def record_audio():
         sf.write(temp_audio_file_name, audio_data, fs)
         return temp_audio_file_name
 
-if st.button("Record and Process Audio"):
-    if not recording:
-        temp_audio_file_name = record_audio()
-        with st.spinner("Processing audio..."):
+def process_audio(temp_audio_file_name):
+    with st.spinner("Processing audio..."):
+        try:
             user_input = transcribe_audio(temp_audio_file_name)
             if user_input and "Error" not in user_input:
                 st.session_state.chat_history.append(("user", user_input))
@@ -89,6 +91,10 @@ if st.button("Record and Process Audio"):
                     st.rerun()
             else:
                 st.error(user_input)
+        except Exception as e:
+            st.error(f"An unexpected error occurred: {e}")
+            logging.exception("An unexpected error occurred during audio processing")
+
 
 # --- Chat Interface ---
 display_chat_messages(st.session_state.chat_history)
@@ -112,3 +118,12 @@ if user_input:
     synthesize_speech(ai_response, temp_audio_file.name)
     play_audio(temp_audio_file.name)
     st.rerun()
+
+
+# --- Audio Input/Processing Button (separate from chat input)---
+if "sounddevice" in sys.modules:
+    if st.button("Record and Process Audio", key="audio_button"):
+        if not recording:
+            st.session_state['audio_button_clicked'] = True
+            temp_audio_file_name = record_audio()
+            process_audio(temp_audio_file_name)
