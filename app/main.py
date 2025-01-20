@@ -8,8 +8,6 @@ from app.utils.vector_db import load_and_split_documents, initialize_vector_db, 
 from app.utils.gemini_utils import generate_response, build_rag_prompt
 from app.audio.audio_processing import transcribe_audio, synthesize_speech, play_audio
 import tempfile
-import sounddevice as sd
-import soundfile as sf
 import streamlit as st
 import tempfile
 import time
